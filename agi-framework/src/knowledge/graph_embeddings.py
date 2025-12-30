@@ -18,7 +18,7 @@ except ImportError:
     TORCH_AVAILABLE = False
 
 try:
-    from torch_geometric.nn import GCNConv, GATConv, SAGEConv
+    from torch_geometric.nn import GCNConv, GATConv, SAGEConv, GINConv
     from torch_geometric.data import Data
     TORCH_GEOMETRIC_AVAILABLE = True
 except ImportError:
@@ -93,10 +93,12 @@ class GNNEncoder(nn.Module if TORCH_AVAILABLE else object):
             노드 임베딩 [num_nodes, output_dim]
         """
         for i, conv in enumerate(self.convs[:-1]):
-            x = conv(x, edge_index)
-            x = F.relu(x)
-            x = self.dropout(x)
-        
+            x = h
+            h = conv(x, edge_index)
+            h = F.relu(x)
+            h = self.dropout(x)
+            h += x
+            
         x = self.convs[-1](x, edge_index)
         
         return x
